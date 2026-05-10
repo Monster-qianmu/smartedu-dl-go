@@ -1,122 +1,215 @@
-# smartedu-dl (`go`)
+# smartedu-dl-go
 
-![build](https://github.com/hantang/smartedu-dl-go/actions/workflows/release.yml/badge.svg)
-![CI](https://github.com/hantang/smartedu-dl-go/actions/workflows/ci.yml/badge.svg)
-![Tag](https://img.shields.io/github/v/tag/hantang/smartedu-dl-go)
+智慧教育平台资源下载工具，基于 Go 和 Fyne 实现图形界面。当前版本支持从 `smartedu.cn` 页面链接、资源直链、教材/课程列表中解析并批量下载资源。
 
-> 智慧教育平台资源下载工具（`go`实现版，基于 fyne 框架 GUI 版本）
+## 功能
 
-## 📝 功能说明
+- 支持输入智慧教育平台页面链接并自动解析资源。
+- 支持教材 PDF、课程课件、图片、字幕、白板、配套音频下载。
+- 支持课程视频下载，视频源为 `m3u8` 时会自动下载分片。
+- 支持“人工智能教育”视频详情页：
+  `https://basic.smartedu.cn/AIEducation/detail?...`
+- 支持“人工智能教育”列表页：
+  `https://basic.smartedu.cn/AIEducation/list?...`
+- 点击“仅下载视频”时，如果解析到多个视频，会弹出列表让用户勾选要下载的内容。
+- 对 AI 教育列表页会自动抓取当前分类下的全部视频，并按每页 12 个标注页码，例如 `第2页 013.`。
+- 支持多线程下载视频，线程数可通过 `--threads` 设置。
+- 支持保存下载日志，日志文件名为 `log-smartedudl.txt`。
+- 支持环境变量 `SMARTEDU_TOKEN` 或系统 Keyring 保存登录信息。
 
-主要支持`smartedu.cn`教材、课件（PDF 格式、视频、音频）、语文诵读音频等下载存储。
+## 支持的链接
 
-### 🖥️ 截图
+可以直接粘贴以下类型链接到“输入链接”页：
 
-> 仅供参考，新版界面可能已调整。
-
-| 平台    | 页面     | 暗黑                       | 明亮                        |
-| ------- | -------- | -------------------------- | --------------------------- |
-|         | 课程包 | ![](images/mac-dark3c.png) | ![](images/mac-light3c.png) |
-| macos   | 输入链接 | ![](images/mac-dark2a.png) | ![](images/mac-light2a.png) |
-|         | 教材列表 | ![](images/mac-dark2b.png) | ![](images/mac-light2b.png) |
-|         |          |                            |
-| windows |          | ![](images/win-dark.png)   | ![](images/win-light.png)   |
-|         |          |                            |
-| linux   |          | ![](images/linux-dark.png) | ![](images/linux-light.png) |
-
-### ⚡️ 更新
-
-- [更新记录](CHANGELOG.md)
-
-## 🚨 备注
-
-### 配置登录信息
-
-如果下载教材不是最新版，需要配置登录信息，找到 **X-ND-AUTH** 字段。
-
-大致步骤：
-
-1. 浏览器打开：<https://basic.smartedu.cn/tchMaterial>
-2. 点击其中一本教材
-3. 弹出新的页面中选择登录
-4. 登录后重新打开教材页面，鼠标右键菜单中选择 **检查**（Inspect）/或者 `F12` 打开开发者工具 （DevTools）.
-5. 之后步骤如下图，找到 **X-ND-AUTH** 字段
-    ![](./images/steps.png)
-6. 图形界面在 **登录信息** 框中填入。
-
-或者使用如下 javascript 代码获取`Access Token`（等同 X-ND-AUTH 中 `MAC id` 的值）
-
-```javascript
-// 来自 https://github.com/happycola233/tchMaterial-parser?tab=readme-ov-file#2-设置-access-token
-
-(function () {
-  const authKey = Object.keys(localStorage).find((key) => key.startsWith("ND_UC_AUTH"));
-  if (!authKey) {
-    console.error("未找到 Access Token，请确保已登录！");
-    return;
-  }
-  const tokenData = JSON.parse(localStorage.getItem(authKey));
-  const accessToken = JSON.parse(tokenData.value).access_token;
-  console.log("%cAccess Token: ", "color: green; font-weight: bold", accessToken);
-})();
+```text
+https://basic.smartedu.cn/tchMaterial/detail?contentType=assets_document&contentId=...
+https://basic.smartedu.cn/syncClassroom/classActivity?activityId=...
+https://basic.smartedu.cn/syncClassroom/prepare/detail?resourceId=...
+https://basic.smartedu.cn/qualityCourse?courseId=...
+https://basic.smartedu.cn/AIEducation/detail?contentType=assets_video&contentId=...
+https://basic.smartedu.cn/AIEducation/list?content_id=...&defaultTag=...
+https://.../edu_product/esp/assets/...
 ```
 
-其中 *ND_UC_AUTH* 完整取值为`ND_UC_AUTH-{sdpAppId}&ncet-xedu&token`
+AI 教育列表页示例：
 
-```javascript
-// 打开页面 https://auth.smartedu.cn/uias/login
-(document.documentElement.outerHTML.match(/sdpAppId: "([\da-fA-F\-]+)"/) || [])[1];
+```text
+https://basic.smartedu.cn/AIEducation/list?content_id=1423337d-b3bd-4b92-855e-e137f330619a&defaultTag=68122750-eba8-4561-92a5-8edc2f9b6ce7
 ```
 
-获取accessToken后，也可以通过拼接地址手动下载，拼接规则：`<文件地址>?accessToken=<accessToken的值>`
+普通解析默认按页面分页取资源；点击“仅下载视频”时，程序会自动展开 AI 教育列表页下的全部视频并弹窗选择。
 
-### Mac ARM芯片（M1等）
+## 运行环境
 
-单独配置（推荐）
+Windows 下运行 Fyne 程序需要 Go 和 GCC。
 
-```shell
-sudo xattr -rd com.apple.quarantine /Applications/应用名.app
+建议环境：
+
+- Go 1.26 或与 `go.mod` 兼容的版本
+- MSYS2 UCRT64 GCC
+- Windows PowerShell
+
+如果 `go run` 提示找不到 `gcc`，把 Go 和 MSYS2 UCRT64 加到当前 PowerShell：
+
+```powershell
+$env:Path='C:\Program Files\Go\bin;C:\msys64\ucrt64\bin;' + $env:Path
 ```
 
-或者，开启任何来源（Anywhere）：
+如果下载依赖很慢，可以设置 Go 代理：
 
-1. 终端命令行输入
-```shell
-sudo spctl --master-disable
-# 恢复默认
-# sudo spctl --master-enable
+```powershell
+$env:GOPROXY='https://goproxy.cn,direct'
 ```
 
-2. 打开 “系统设置”，进入 “隐私与安全性”> “安全性”，选择 “任何来源” 选项。
-  （System Settings -> Priversy & Security -> Security -> Anywhere ）
+## 启动
 
-## 👷 开发
+在项目目录执行：
 
-```shell
-# go语言开发环境
-# 镜像
-# export GOPROXY=https://goproxy.cn/,direct
-
-# 更新依赖
-# go get go@latest
-# go get -u
-
-# 执行
-go mod tidy
-go run main.go
-
-# 参数：debug打印调试信息；local优先使用本地数据文件
-go run main.go --debug --local
+```powershell
+go run . --debug --threads 10
 ```
 
-## 🌐 相关项目
+参数说明：
 
-- 类似项目
-  - [happycola233/tchMaterial-parser](https://github.com/happycola233/tchMaterial-parser)
-  - [52beijixing/smartedu-download](https://github.com/52beijixing/smartedu-download)
-  - 智慧教育平台电子教材下载器
-    - <https://www.52pojie.cn/thread-2036716-1-1.html>
-    - <https://www.52pojie.cn/thread-1891126-1-1.html>
-  - [cjhdevact/FlyEduDownloader](https://github.com/cjhdevact/FlyEduDownloader)
+- `--debug`：输出调试日志，排查解析失败时建议开启。
+- `--threads 10`：视频分片并发下载数，电脑或网络较慢时可改小。
+- `--local`：优先使用本地数据文件。
 
-- 图标：修改自<https://www.smartedu.cn/>
+## 登录信息
+
+部分教材、课程和视频需要登录信息。程序接受两种写法：
+
+- 完整 `X-ND-AUTH`
+- Access Token
+
+优先级：
+
+1. 环境变量 `SMARTEDU_TOKEN`
+2. 系统 Keyring 中保存的 Token
+3. 界面“登录信息”输入框
+
+推荐把 Access Token 写入当前用户环境变量：
+
+```powershell
+[Environment]::SetEnvironmentVariable('SMARTEDU_TOKEN', '你的AccessToken', 'User')
+```
+
+设置后重新打开 PowerShell，再运行程序。
+
+也可以直接把 Token 粘贴到界面底部“登录信息”输入框，程序会在回车或失焦时保存到系统 Keyring。
+
+## 使用方法
+
+### 下载普通资源
+
+1. 打开程序。
+2. 进入“输入链接”。
+3. 粘贴一个或多个资源页面链接，每行一个。
+4. 选择保存目录。
+5. 勾选要下载的资源类型，例如 PDF、MP3、字幕。
+6. 点击“下载已选择资源”。
+
+### 下载视频
+
+1. 粘贴课程视频详情页、AI 教育详情页或 AI 教育列表页。
+2. 选择保存目录。
+3. 点击“仅下载视频”。
+4. 如果解析到多个视频，会弹出选择窗口。
+5. 勾选要下载的视频，点击“开始下载”。
+
+AI 教育列表页常见情况是浏览器点“下一页”后地址栏不变。现在不需要复制第二页地址，程序会把当前分类下的视频全部解析出来，并在弹窗中按 `第1页 001-012`、`第2页 013-024` 这样的顺序展示。
+
+### 只下载第二页视频
+
+以 AI 教育列表页为例：
+
+1. 粘贴第一页地址。
+2. 点击“仅下载视频”。
+3. 弹窗出现后点“全不选”。
+4. 勾选 `第2页 013.` 到 `第2页 024.` 的视频。
+5. 点击“开始下载”。
+
+## 视频格式
+
+程序解析到的视频格式通常是 `m3u8`。下载时会抓取全部分片并保存为 `.ts` 文件。
+
+如需转成 `.mp4`，可以使用 FFmpeg：
+
+```powershell
+ffmpeg -i input.ts -c copy output.mp4
+```
+
+## 常见问题
+
+### go run 卡在 downloading
+
+第一次运行会下载依赖，Fyne 依赖较多，可能需要几分钟。可以先设置代理：
+
+```powershell
+$env:GOPROXY='https://goproxy.cn,direct'
+go mod download
+go run . --debug --threads 10
+```
+
+### 提示 gcc 找不到
+
+安装 MSYS2 后确认存在：
+
+```text
+C:\msys64\ucrt64\bin\gcc.exe
+```
+
+然后在 PowerShell 加入 PATH：
+
+```powershell
+$env:Path='C:\Program Files\Go\bin;C:\msys64\ucrt64\bin;' + $env:Path
+```
+
+### 下载失败或 401
+
+通常是 Token 失效。重新登录智慧教育平台后获取新的 Access Token，再更新 `SMARTEDU_TOKEN` 或界面里的登录信息。
+
+### AI 教育列表页只想下载当前第一页
+
+普通“下载已选择资源”会按列表 URL 的分页参数解析；“仅下载视频”会为了方便选择，自动展开全部视频。如果只要第一页，可以在弹窗里只保留 `第1页 001-012`。
+
+## 开发
+
+格式化：
+
+```powershell
+gofmt -w internal
+```
+
+测试：
+
+```powershell
+go test ./... -count=1
+```
+
+本地运行：
+
+```powershell
+go run . --debug --threads 10
+```
+
+## 生成 Windows exe
+
+在项目目录执行：
+
+```powershell
+New-Item -ItemType Directory -Force dist | Out-Null
+go build -trimpath -ldflags "-H=windowsgui -s -w" -o dist\smartedu-dl-go.exe .
+Compress-Archive -Path dist\smartedu-dl-go.exe,README.md,CHANGELOG.md,LICENSE -DestinationPath dist\smartedu-dl-go-windows-amd64.zip -Force
+```
+
+生成结果：
+
+- `dist\smartedu-dl-go.exe`：可直接双击运行的 Windows 程序。
+- `dist\smartedu-dl-go-windows-amd64.zip`：适合发给别人使用的压缩包。
+
+这个 exe 不会包含任何人的 Token。其他用户第一次运行后，需要在界面“登录信息”中填写自己的 Access Token 或 `X-ND-AUTH`。
+
+## 说明
+
+本项目仅用于学习和个人资源整理。下载内容应遵守智慧教育平台的使用规则和相关版权要求。

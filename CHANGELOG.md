@@ -1,62 +1,94 @@
 # 更新记录
 
-## v0.2
+## 未发布：本地增强版
 
-【推荐版本】
+日期：2026-05-09
 
-Tab页面：
+### 新增
 
-- [x] 教材链接输入下载
-- [x] 教材查询多选下载
-- [x] 课程包查询多选下载
-- [x] 语文诵读音频下载
+- 新增 AI 教育视频详情页解析：
+  `https://basic.smartedu.cn/AIEducation/detail?contentType=assets_video&contentId=...`
+- 新增 AI 教育列表页解析：
+  `https://basic.smartedu.cn/AIEducation/list?content_id=...&defaultTag=...`
+- 点击“仅下载视频”时，AI 教育列表页会自动展开当前分类下的全部视频。
+- 当解析到多个视频时，新增“选择要下载的视频”弹窗。
+- 视频选择弹窗默认全选，支持“全选”和“全不选”。
+- AI 教育列表页视频会按每页 12 个标注页码，例如 `第1页 001.`、`第2页 013.`，方便选择第二页及后续页面的视频。
+- 视频解析改为后台执行，解析期间界面显示“正在解析视频资源...”，避免按钮点击后看起来没有反应。
+- README 增加 Windows 运行、Token 配置、视频选择弹窗、常见问题说明。
+- README 增加 Windows exe 生成和压缩包发布说明。
 
-更新：
+### 修复
 
-- `v0.2.0` ~ `v0.2.6`
-  - 支持登录信息配置（devtools/network选择pdf文件找到Request Headers中`x-nd-auth`参数）
-  - 增加日志统计（结果保存在`log-smartedudl.txt`）
-  - 增加备用解析链接
-  - 已知问题：
-    - 部分音频下载可能失败（包括已配置登录信息）；
-    - 非登录状态部分资源可能下载失败或下载的是旧版教材；
-    - 新增备用解析，可能导致下载同一个下载多个对应PDF（可能不完全相同）。
-- `v0.2.7`
-  - 新增课程包Tab页面
-  - 支持视频下载（需要登录，单线程，保存格式`.ts`文件，用户可用**FFmpeg**等工具将之转化成其他视频格式）
-  - 登录信息可仅配置Access Token
-  - 修改字体为“抖音美好体” 来自 [bytedance/fonts][bytedance-fonts]
-- `v0.2.8`/`v0.2.9`
-  - 修复“精品课程”解析 [#3][issue-3]
-- `v0.2.10`
-  - 修复保存文件名（去除标题中特殊字符）[#5][issue-5]
-- `v0.2.11`
-  - 修正保存目录问题 [#4][issue-4] [#6][issue-6]
-  - 修复保存文件名（去除标题中特殊字符，含视频资源） [#5][issue-5]
-  - 下载资源根据URL路径去除重复
-- `v0.2.12`
-  - 修复非加密视频下载错误 [#7][issue-7]
-  - 支持直接输入资源链接
-  - 支持多线程下载视频
-- `v0.2.13`
-  - 修复同名资源下载错误 [#8][issue-8]
-  - 修订提示文字
-- `v0.2.14`
-  - 修复未选择资源类型时出现下载按钮禁用问题
-  - 新增登录信息保存和预加载（或使用环境变量`SMARTEDU_TOKEN`） [#9][issue-9]
-  - 新增中小学语文示范诵读库标签页面
-- `v0.2.15` 没有功能更新，仅更新依赖模块。
+- 修复直接输入资源直链时同一个链接被加入两次的问题。
+- 修复 AI 教育列表页浏览器翻页后地址栏不变，导致用户无法单独选择第二页视频的问题。
+- 修复部分 AI 教育列表页把 `defaultTag` 错误编码进 `content_id` 后，提示“未解析到有效资源”的问题。
 
-[bytedance-fonts]: https://github.com/bytedance/fonts
+### 验证
 
-[issue-3]: https://github.com/hantang/smartedu-dl-go/issues/3
-[issue-4]: https://github.com/hantang/smartedu-dl-go/issues/4
-[issue-5]: https://github.com/hantang/smartedu-dl-go/issues/5
-[issue-6]: https://github.com/hantang/smartedu-dl-go/issues/6
-[issue-7]: https://github.com/hantang/smartedu-dl-go/issues/7
-[issue-8]: https://github.com/hantang/smartedu-dl-go/issues/8
-[issue-9]: https://github.com/hantang/smartedu-dl-go/issues/9
+- 已执行：
+
+```powershell
+go test ./... -count=1
+```
+
+- 结果：全部通过。
+
+## v0.2.15
+
+- 无功能更新。
+- 更新依赖模块。
+
+## v0.2.14
+
+- 修复未选择资源类型时下载按钮被禁用的问题。
+- 新增登录信息保存和预加载。
+- 支持通过环境变量 `SMARTEDU_TOKEN` 读取登录信息。
+- 新增中小学语文示范诵读库标签页面。
+
+## v0.2.13
+
+- 修复同名资源下载错误。
+- 修订提示文字。
+
+## v0.2.12
+
+- 修复非加密视频下载错误。
+- 支持直接输入资源链接。
+- 支持多线程下载视频。
+
+## v0.2.11
+
+- 修正保存目录问题。
+- 修复文件名中特殊字符导致保存失败的问题。
+- 下载资源根据 URL 路径去重。
+
+## v0.2.10
+
+- 修复保存文件名，去除标题中特殊字符。
+
+## v0.2.8 - v0.2.9
+
+- 修复“精品课程”解析问题。
+
+## v0.2.7
+
+- 新增课程包 Tab 页面。
+- 支持视频下载。
+- 登录信息支持仅配置 Access Token。
+- 修改字体为“抖音美好体”。
+
+## v0.2.0 - v0.2.6
+
+- 支持登录信息配置。
+- 支持日志统计，结果保存到 `log-smartedudl.txt`。
+- 增加备用解析链接。
+- 支持教材链接输入下载。
+- 支持教材查询多选下载。
+- 支持课程包查询多选下载。
+- 支持语文诵读音频下载。
 
 ## v0.1
 
-仅支持链接输入列表下载(`v0.1.x`) 【过时】
+- 初始版本。
+- 仅支持链接输入列表下载。

@@ -48,6 +48,9 @@ trash/
 download/
 downloads/
 data/
+dist/
+.gocache/
+log-smartedudl.txt
 
 # fyne
 fyne_metadata_init.go
