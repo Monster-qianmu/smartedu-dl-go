@@ -396,12 +396,14 @@ func CreateOperationArea(w fyne.Window, tab *container.AppTabs, linkItemMaps map
 		// 下载进行中禁止再次点击
 		downloadButton.Disable()
 		downloadVideoButton.Disable()
-		progressLabel.SetText("正在解析视频资源...")
 
 		videoLinks, hasAIEducationListPage := expandAIEducationListForVideoSelection(filteredURLs)
 		selectionPageSize := 0
 		if hasAIEducationListPage {
 			selectionPageSize = dl.AIEducationDefaultPageSize
+			progressLabel.SetText("正在解析人工智能教育视频资源，视频较多时需要一点时间，请耐心等待...")
+		} else {
+			progressLabel.SetText("正在解析视频资源...")
 		}
 		go func() {
 			formatList := dl.FORMAT_VIDEO
